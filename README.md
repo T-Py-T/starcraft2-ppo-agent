@@ -1,203 +1,125 @@
-# StarCraft2Bot
+# StarCraft II PPO Agent
 
-I built this StarCraft II bot to explore deep reinforcement learning in complex real-time strategy environments. The bot uses PPO to learn Protoss strategies, focusing on Void Ray air superiority tactics. It's a custom RL environment that processes visual game state and learns strategic decision-making through trial and error.
+A Gymnasium environment and PPO training loop for a Protoss StarCraft II bot.
+The learner and the BurnySC2 game process communicate through a small,
+process-safe request/response protocol so training logic stays separate from
+the live game client.
 
-## What I Built
+## Architecture
 
-- **PPO Training**: Using Stable Baselines3 with MLP policies to learn optimal actions
-- **Custom RL Environment**: Gymnasium wrapper around StarCraft II with 224x224x3 visual observations
-- **Computer Vision Pipeline**: OpenCV extracts game state from screen captures
-- **Experiment Tracking**: Wandb logs training metrics and hyperparameter sweeps
-- **Protoss Strategy**: Bot learns Gateway → Cybernetics Core → Stargate → Void Ray build orders
+```text
+Stable Baselines3 PPO
+        │
+        ▼
+Gymnasium environment
+        │ action request
+        ▼
+atomic request file + episode/request ID
+        │
+        ▼
+BurnySC2 Protoss bot ──► StarCraft II
+        │
+        └──────── observation, reward, and terminal response
+                         │
+                         ▼
+                atomic response file
+```
 
-## How It Works
+The IPC layer uses separate single-writer request and response files. Each
+message includes episode and request identifiers, allowing the learner to
+reject stale state. `SC2_RUNTIME_DIR` can be set to isolate concurrent runs.
 
-### RL Environment
-- **State**: 224x224x3 RGB screenshots from the game
-- **Actions**: 6 discrete choices (Expand/Mine, Build Stargate, Build Void Ray, Scout, Attack, Flee)
-- **Rewards**: I designed a multi-objective system that rewards economic growth, military production, and tactical execution
-- **Training**: PPO learns through trial and error, with hyperparameters tracked in Wandb
+## Environment contract
 
-### Bot Strategy
-- **Protoss Focus**: Specialized in Void Ray air superiority tactics
-- **Economic AI**: Automatically manages worker distribution and resource optimization
-- **Military AI**: Dynamic unit production, scouting, and combat micro-management
-- **Build Orders**: Learns optimal progression from Gateway → Cybernetics Core → Stargate → Void Ray
+- **Observation:** `224 × 224 × 3` visual state.
+- **Actions:** expand/mine, build Stargate, build Void Ray, scout, attack, and
+  retreat.
+- **Policy:** PPO through Stable Baselines3.
+- **Bot:** Protoss economy and production logic built with BurnySC2.
+- **Tracking:** optional Weights & Biases and TensorBoard logging.
 
-### Tech Stack
-- **ML**: PyTorch, Stable Baselines3, Gymnasium
-- **Game API**: BurnySC2 (python-sc2) for StarCraft II integration
-- **Vision**: OpenCV for real-time game state extraction
-- **Tracking**: Wandb for experiment logging and hyperparameter sweeps
-- **Dev Tools**: uv for dependency management, cross-platform support
+The game-side implementation lives in
+[`src/incredibot-sct.py`](src/incredibot-sct.py). The Gymnasium adapter and
+reward lifecycle are in [`src/sc2env.py`](src/sc2env.py), and the shared IPC
+contract is in [`src/ipc.py`](src/ipc.py).
 
-## Requirements
+## Quick start
 
-- Python 3.9–3.12
-- StarCraft II installed (see platform-specific setup below)
-- [uv](https://github.com/astral-sh/uv) for dependency management
+Prerequisites:
 
-## Quick Start
+- Python 3.9–3.12;
+- [uv](https://docs.astral.sh/uv/);
+- a licensed StarCraft II installation for live runs; and
+- compatible `.SC2Map` files.
 
-1. **Clone and setup:**
-   ```sh
-   git clone https://github.com/T-Py-T/StarCraft2Bot.git
-   cd StarCraft2Bot
-   pip install uv
-   uv sync
-   ```
-
-2. **Train the AI model:**
-   ```sh
-   make train
-   ```
-
-3. **Test trained model:**
-   ```sh
-   make test-model
-   ```
-
-For development, install the locked development tools and run the headless
-checks without launching StarCraft II:
-
-```sh
+```bash
+git clone https://github.com/T-Py-T/starcraft2-ppo-agent.git
+cd starcraft2-ppo-agent
 uv sync --locked --extra dev
+
+make setup-maps
+make check-env
+```
+
+Platform-specific setup is under [`run/`](run):
+
+- [`run/windows/`](run/windows) for a native Windows installation;
+- [`run/linux/`](run/linux) for Linux map setup;
+- [`run/macos/`](run/macos) for CrossOver or a remote Windows VM.
+
+If the game is installed in a non-default location, set `SC2PATH` or update the
+path handling in [`src/config.py`](src/config.py).
+
+## Train and evaluate
+
+Start PPO training:
+
+```bash
+make train
+```
+
+Run the game bot directly or evaluate a saved model:
+
+```bash
+make test-bot
+make test-model
+```
+
+These commands launch the commercial game runtime and depend on local maps,
+display settings, and model files. Model output, TensorBoard logs, and optional
+Weights & Biases runs are stored outside the source modules.
+
+## Headless validation
+
+The protocol and environment can be tested without launching StarCraft II:
+
+```bash
 make test
 make lint
 make type-check
 ```
 
-Pull requests and `main` run the focused IPC, environment, and bot tests on
-Python 3.9 and 3.11. These checks validate the process protocol only; they do
-not launch StarCraft II or establish live-game behavior.
+The tests cover atomic publication, request and episode correlation, stale
+message rejection, the fixed observation shape, terminal-state precedence,
+and the initial ready handshake.
 
-## Platform Setup
+## Repository layout
 
-### Windows (Recommended)
-```powershell
-# Install StarCraft II from Battle.net
-# Update STARCRAFT_II_PATH_WINDOWS in src/config.py
-cd run/windows
-.\setup_maps.ps1
-```
-
-### Linux/WSL
-```bash
-# Install StarCraft II
-# Update STARCRAFT_II_PATH_LINUX in src/config.py
-cd run/linux
-python3 download_maps.py
-```
-
-### macOS
-```bash
-# Use Parallels Desktop for best compatibility
-# See run/macos/PARALLELS_SETUP.md for detailed instructions
-make setup-macos
-```
-
-## Training & Evaluation
-
-### ML Training Pipeline
-```bash
-# Start PPO training with experiment tracking
-make train
-
-# Train with custom hyperparameters
-uv run src/trainppo.py
-
-# Load and continue training existing model
-uv run src/load-train-mlpp.py
-```
-
-### Model Testing & Evaluation
-```bash
-# Test trained model against AI opponents
-make test-model
-
-# Direct bot testing
-make test-bot
-
-# Manual model evaluation
-uv run src/test_model.py
-```
-
-### Experiment Management
-```bash
-# Monitor training with Wandb
-# Training metrics automatically logged to: https://wandb.ai/tnt850910/SC2RLv6
-
-# Clean up training artifacts
-make clean-models
-make clean-logs
-```
-
-## Configuration
-
-### Key Settings (`src/config.py`)
-- **StarCraft II Path**: Set platform-specific paths for game installation
-- **Wandb Mode**: Configure experiment tracking (offline/online)
-- **Training Parameters**: Adjust PPO hyperparameters and training duration
-- **Reward Engineering**: Modify reward weights for different strategic objectives
-
-### Environment communication
-
-The Gym environment and bot exchange a fixed-shape observation, action, reward,
-and completion flag through separate, single-writer request and response NumPy
-archives in `src/.runtime/`. Atomic publication uses a unique temporary file for
-each write, the archive loader disables object payloads, and episode/request IDs
-reject stale messages. Runtime state/results are ignored by Git. Set
-`SC2_RUNTIME_DIR` when separate training jobs need isolated state paths.
-
-## Game Maps
-
-### Map Setup
-Place StarCraft II map files (`.SC2Map`) directly in the `Maps/` folder. The AI automatically detects available maps for training and testing.
-
-### Recommended Maps
-- **Training**: `Simple64`, `Simple96`, `Simple128` for focused learning
-- **Testing**: Standard ladder maps for competitive evaluation
-- **Download**: [Blizzard Map Packs](https://github.com/Blizzard/s2client-proto?tab=readme-ov-file#downloads) (password: `iagreetotheeula`)
-
-## Project Architecture
-
-### Core ML Components
-```
+```text
 src/
-├── sc2env.py           # Custom Gymnasium RL environment
-├── trainppo.py         # PPO training pipeline with Wandb integration
-├── incredibot-sct.py   # StarCraft II bot AI implementation
-├── ipc.py              # Safe atomic environment/bot state exchange
-├── test_model.py       # Model evaluation and testing
-└── config.py           # Configuration and hyperparameters
+├── sc2env.py             # Gymnasium environment and reward lifecycle
+├── ipc.py                # process-safe state exchange
+├── incredibot-sct.py     # Protoss game agent
+├── trainppo.py           # PPO training entry point
+├── test_model.py         # live saved-model evaluation
+└── config.py             # platform and runtime paths
+tests/                    # headless protocol and environment tests
+run/                      # Windows, Linux, and macOS setup
+scripts/                  # remote-development helpers
 ```
-
-### Architecture
-- **Modular Design**: Clean separation between environment, training, and bot logic
-- **Cross-Platform**: Works on Windows, Linux, macOS with automatic OS detection
-- **Experiment Tracking**: Wandb integration for reproducible training runs
-- **Configurable**: Easy hyperparameter tuning and training duration adjustment
-
-## Validation Status
-
-The locked headless test suite verifies atomic request/response publication,
-episode and request correlation, fixed `224x224x3` observations, stale-message
-handling, terminal-response precedence, and the initial ready handshake through
-BurnySC2's awaited `on_start_async` lifecycle hook.
-
-Live StarCraft II training and gameplay have not been validated in this change.
-A licensed StarCraft II installation is still required to evaluate learning,
-convergence, win rate, strategy quality, and end-to-end runtime behavior.
-
-## Next Steps
-
-I'm working on several improvements:
-- **Multi-Race Support**: Extending beyond Protoss to Terran and Zerg strategies
-- **Advanced Vision**: Implementing semantic segmentation for better game state understanding
-- **Hierarchical RL**: Adding high-level strategic planning on top of tactical execution
-- **Self-Play**: Training against progressively stronger versions of itself
-- **Performance Optimization**: Reducing training time and improving sample efficiency
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details
+This project is available under the [MIT License](LICENSE). StarCraft II,
+BurnySC2, Stable Baselines3, Gymnasium, and other dependencies remain under
+their respective licenses and terms.
