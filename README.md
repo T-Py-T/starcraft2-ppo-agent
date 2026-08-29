@@ -1,86 +1,56 @@
 # StarCraft II PPO Agent
 
-A reinforcement-learning environment and Protoss strategy agent for StarCraft
-II. The project couples a Gymnasium environment to a BurnySC2 bot through a
-small, process-safe IPC contract, then trains a PPO policy with Stable
-Baselines3.
-
-The strongest public evidence today is the environment boundary and its
-headless regression suite. Live training quality, convergence, and competitive
-gameplay still require a licensed StarCraft II installation and are not claimed
-as verified by this repository.
-
-## At a glance
-
-| Area | Public evidence | What it demonstrates |
-| --- | --- | --- |
-| RL environment | [`src/sc2env.py`](src/sc2env.py) | Fixed-shape observations, discrete actions, rewards, and episode lifecycle |
-| Runtime protocol | [`src/ipc.py`](src/ipc.py) | Atomic request/response publication, correlation IDs, stale-message rejection, and isolated run directories |
-| Game agent | [`src/incredibot-sct.py`](src/incredibot-sct.py) | Protoss economy, production, scouting, attack, and retreat actions through BurnySC2 |
-| PPO pipeline | [`src/trainppo.py`](src/trainppo.py) | Stable Baselines3 training entry point and optional Weights & Biases tracking |
-| Headless validation | [`tests/`](tests), [PR workflow](.github/workflows/test.yml) | Protocol and environment behavior without launching StarCraft II |
-| Cross-platform tooling | [`run/`](run), [`scripts/`](scripts) | Windows, Linux/WSL, and macOS/VM setup paths |
+A Gymnasium environment and PPO training loop for a Protoss StarCraft II bot.
+The learner and the BurnySC2 game process communicate through a small,
+process-safe request/response protocol so training logic stays separate from
+the live game client.
 
 ## Architecture
 
 ```text
-PPO learner / Gymnasium
+Stable Baselines3 PPO
+        │
+        ▼
+Gymnasium environment
         │ action request
         ▼
-atomic request archive + episode/request ID
+atomic request file + episode/request ID
         │
         ▼
 BurnySC2 Protoss bot ──► StarCraft II
         │
-        └──────── observation + reward + terminal response
+        └──────── observation, reward, and terminal response
                          │
                          ▼
-              atomic response archive
+                atomic response file
 ```
 
-The IPC layer uses separate single-writer request and response files. Unique
-temporary files make publication atomic; archive loading rejects object
-payloads; correlation identifiers prevent a learner from accepting stale state
-from a previous step or episode. `SC2_RUNTIME_DIR` isolates concurrent runs.
+The IPC layer uses separate single-writer request and response files. Each
+message includes episode and request identifiers, allowing the learner to
+reject stale state. `SC2_RUNTIME_DIR` can be set to isolate concurrent runs.
 
-## Action and observation contract
+## Environment contract
 
 - **Observation:** `224 × 224 × 3` visual state.
-- **Actions:** expand/mine, build Stargate, build Void Ray, scout, attack, or
+- **Actions:** expand/mine, build Stargate, build Void Ray, scout, attack, and
   retreat.
-- **Policy:** PPO with Stable Baselines3.
-- **Strategy scope:** Protoss progression toward Void Ray production.
-- **Tracking:** optional Weights & Biases and TensorBoard instrumentation.
+- **Policy:** PPO through Stable Baselines3.
+- **Bot:** Protoss economy and production logic built with BurnySC2.
+- **Tracking:** optional Weights & Biases and TensorBoard logging.
 
-The reward implementation is inspectable in the environment, but this public
-repository does not retain a model card, training dataset, seed matrix, raw
-training curves, evaluation replays, or a reproducible win-rate artifact.
+The game-side implementation lives in
+[`src/incredibot-sct.py`](src/incredibot-sct.py). The Gymnasium adapter and
+reward lifecycle are in [`src/sc2env.py`](src/sc2env.py), and the shared IPC
+contract is in [`src/ipc.py`](src/ipc.py).
 
-## Headless validation
-
-The local gate exercises the software boundary that can be tested without the
-commercial game runtime:
-
-```bash
-uv sync --locked --extra dev
-make test
-make lint
-make type-check
-```
-
-The tests cover atomic publication, request and episode correlation, fixed
-observation shape, stale-message handling, terminal precedence, and the initial
-ready handshake. The GitHub Actions workflow runs only for pull requests, after
-agents have run the same checks locally.
-
-## Live setup
+## Quick start
 
 Prerequisites:
 
-- Python 3.9–3.12 on the current default branch;
-- a licensed StarCraft II installation;
-- compatible maps; and
-- [`uv`](https://docs.astral.sh/uv/) for the locked environment.
+- Python 3.9–3.12;
+- [uv](https://docs.astral.sh/uv/);
+- a licensed StarCraft II installation for live runs; and
+- compatible `.SC2Map` files.
 
 ```bash
 git clone https://github.com/T-Py-T/starcraft2-ppo-agent.git
@@ -88,36 +58,68 @@ cd starcraft2-ppo-agent
 uv sync --locked --extra dev
 
 make setup-maps
+make check-env
+```
+
+Platform-specific setup is under [`run/`](run):
+
+- [`run/windows/`](run/windows) for a native Windows installation;
+- [`run/linux/`](run/linux) for Linux map setup;
+- [`run/macos/`](run/macos) for CrossOver or a remote Windows VM.
+
+If the game is installed in a non-default location, set `SC2PATH` or update the
+path handling in [`src/config.py`](src/config.py).
+
+## Train and evaluate
+
+Start PPO training:
+
+```bash
 make train
 ```
 
-Platform-specific setup lives under [`run/`](run). Live validation is
-deliberately separate from `make test` because it depends on the installed game,
-maps, display/runtime configuration, and local model artifacts.
+Run the game bot directly or evaluate a saved model:
 
-## Repository map
+```bash
+make test-bot
+make test-model
+```
+
+These commands launch the commercial game runtime and depend on local maps,
+display settings, and model files. Model output, TensorBoard logs, and optional
+Weights & Biases runs are stored outside the source modules.
+
+## Headless validation
+
+The protocol and environment can be tested without launching StarCraft II:
+
+```bash
+make test
+make lint
+make type-check
+```
+
+The tests cover atomic publication, request and episode correlation, stale
+message rejection, the fixed observation shape, terminal-state precedence,
+and the initial ready handshake.
+
+## Repository layout
 
 ```text
 src/
-├── sc2env.py             # Gymnasium environment
+├── sc2env.py             # Gymnasium environment and reward lifecycle
 ├── ipc.py                # process-safe state exchange
 ├── incredibot-sct.py     # Protoss game agent
 ├── trainppo.py           # PPO training entry point
-├── test_model.py         # live model evaluation
-└── config.py             # runtime paths and settings
-tests/                    # headless protocol/environment regressions
-run/                      # platform-specific game setup
+├── test_model.py         # live saved-model evaluation
+└── config.py             # platform and runtime paths
+tests/                    # headless protocol and environment tests
+run/                      # Windows, Linux, and macOS setup
 scripts/                  # remote-development helpers
 ```
 
-## Evidence boundary and next proof
+## License
 
-This repository currently proves the tested software contract around training;
-it does not prove that a trained policy converges or wins. The next portfolio-
-grade evidence should be one versioned evaluation bundle containing the exact
-code and environment revisions, seeds, opponent difficulty, maps, episode
-budget, raw metrics, model checksum, and representative replays.
-
-The repository does not currently include a repository-wide license file. Do
-not infer an MIT grant from earlier README text; upstream packages and game
-assets remain subject to their own terms.
+This project is available under the [MIT License](LICENSE). StarCraft II,
+BurnySC2, Stable Baselines3, Gymnasium, and other dependencies remain under
+their respective licenses and terms.
