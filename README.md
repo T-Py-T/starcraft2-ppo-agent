@@ -63,7 +63,7 @@ for experimentation, not as the baseline setup.
 
 Prerequisites:
 
-- Python 3.9–3.12;
+- Python 3.11 or 3.12;
 - [uv](https://docs.astral.sh/uv/);
 - a licensed StarCraft II installation for live runs; and
 - compatible `.SC2Map` files for the selected scenario.
