@@ -1,5 +1,7 @@
 # StarCraft II PPO Agent
 
+![Headless tests](https://github.com/T-Py-T/starcraft2-ppo-agent/actions/workflows/test.yml/badge.svg?branch=main)
+
 A Gymnasium environment and PPO training loop for a Protoss StarCraft II bot.
 The learner and the BurnySC2 game process communicate through a small,
 process-safe request/response protocol so training logic stays separate from
