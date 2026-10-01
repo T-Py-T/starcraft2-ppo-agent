@@ -13,8 +13,8 @@ be developed and tested headlessly on Windows, macOS, or Linux without starting
 the game.
 
 For a skim-friendly what/why/how summary, suggested GitHub topics, and links to
-[SECURITY.md](SECURITY.md) and other docs, see
-[docs/HIREABILITY.md](docs/HIREABILITY.md).
+[SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), and other docs,
+see [docs/HIREABILITY.md](docs/HIREABILITY.md).
 
 ## Architecture
 
@@ -173,4 +173,6 @@ scripts/                  # remote-development helpers
 
 This project is available under the [MIT License](LICENSE). StarCraft II,
 BurnySC2, Stable Baselines3, Gymnasium, and other dependencies remain under
-their respective licenses and terms.
+their respective licenses and terms. Report security issues only through
+[SECURITY.md](SECURITY.md); see [CONTRIBUTING.md](CONTRIBUTING.md) for pull
+requests and local checks.

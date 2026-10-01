@@ -26,3 +26,10 @@ Runtime secrets, game installation paths, and experiment credentials belong outs
 `make train`, `make test-bot`, and `make test-model` are local operator workflows. They help you run PPO training and live evaluation on your own machine. They do not certify third-party game runtimes, model libraries, or generated artifacts as secure.
 
 The headless test gate exercises the IPC contract and environment boundary without launching StarCraft II. Local checks do not certify a harness, game client, provider, or generated change as secure.
+
+## Related documentation
+
+- [README.md](README.md) — architecture, quick start, and headless validation
+- [CONTRIBUTING.md](CONTRIBUTING.md) — pull requests and local checks (not a vulnerability reporting channel)
+- [docs/HIREABILITY.md](docs/HIREABILITY.md) — skim index, suggested GitHub topics, and documentation cross-links
+- [LICENSE](LICENSE) — MIT; StarCraft II, BurnySC2, and other dependencies keep their own licenses and terms
