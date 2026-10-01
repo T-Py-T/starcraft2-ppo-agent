@@ -19,10 +19,11 @@ Maintainers may add repository topics such as: `starcraft2`, `reinforcement-lear
 - [README](../README.md) — architecture, quick start, and supported workflows
 - [LICENSE](../LICENSE) — MIT; StarCraft II, BurnySC2, and other dependencies keep their own licenses and terms
 - [SECURITY.md](../SECURITY.md) — vulnerability reporting and safe evidence handling
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — pull requests, local checks, and what not to commit
 - [docs/gitroll-triage.md](gitroll-triage.md) — static finding disposition at a pinned revision
 - Platform setup: [`run/windows/`](../run/windows/), [`run/linux/`](../run/linux/), [`run/macos/`](../run/macos/)
 
-There is no separate `CONTRIBUTING.md`; use the README quick start, `make test` / `make lint`, and open a pull request for code changes. Report security issues only through [SECURITY.md](../SECURITY.md).
+Report security issues only through [SECURITY.md](../SECURITY.md). Code and documentation changes follow [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Revision cite (`tip≠READY`)
 
@@ -30,7 +31,7 @@ Docs describe the tree at a cited commit prefix. **Tip citation is not READY**: 
 
 | Ref | Meaning |
 | --- | --- |
-| `86ce0fd` | `main` tip prefix when this page was added |
+| `c6532276` | `main` tip prefix after Ship 253 merge (hireability cross-links) |
 | This PR | Pending Steward resolve; refresh the tip row after merge when `main` advances |
 
-Revert by deleting this file and removing the README pointer.
+Revert by deleting this file and removing pointers from [README.md](../README.md), [SECURITY.md](../SECURITY.md), and [CONTRIBUTING.md](../CONTRIBUTING.md).
