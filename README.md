@@ -12,6 +12,10 @@ on the same machine. The protocol, environment contract, and strategy logic can
 be developed and tested headlessly on Windows, macOS, or Linux without starting
 the game.
 
+For a skim-friendly what/why/how summary, suggested GitHub topics, and links to
+[SECURITY.md](SECURITY.md) and other docs, see
+[docs/HIREABILITY.md](docs/HIREABILITY.md).
+
 ## Architecture
 
 ```text
