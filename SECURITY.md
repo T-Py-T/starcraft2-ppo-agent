@@ -31,5 +31,4 @@ The headless test gate exercises the IPC contract and environment boundary witho
 
 - [README.md](README.md) — architecture, quick start, and headless validation
 - [CONTRIBUTING.md](CONTRIBUTING.md) — pull requests and local checks (not a vulnerability reporting channel)
-- [docs/HIREABILITY.md](docs/HIREABILITY.md) — skim index, suggested GitHub topics, and documentation cross-links
 - [LICENSE](LICENSE) — MIT; StarCraft II, BurnySC2, and other dependencies keep their own licenses and terms

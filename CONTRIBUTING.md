@@ -19,19 +19,18 @@ Live `make train`, `make test-bot`, and `make test-model` workflows need a licen
 
 - Target the `main` branch with a focused change and a short description.
 - Keep API keys, Weights & Biases tokens, credentials, maps, checkpoints, and unredacted run exports out of commits (see [SECURITY.md](SECURITY.md)).
-- Skim [docs/HIREABILITY.md](docs/HIREABILITY.md) for repository context, suggested GitHub topics, and links to platform setup under [`run/`](run/).
 
 ## License
 
 Contributions are accepted under the same [MIT License](LICENSE) as the project. StarCraft II, BurnySC2, and other dependencies remain under their own licenses and terms.
 
-## Revision cite (`tip≠READY`)
+## Revision cite
 
 Docs describe the tree at a cited commit prefix. **Tip citation is not READY**: it does not mean production readiness, benchmark scores, bake-off claims, or unparked authentication flows.
 
 | Ref | Meaning |
 | --- | --- |
-| `c6532276` | `main` tip prefix after Ship 253 merge (hireability cross-links) |
+| `c6532276` | `main` tip prefix after Ship 253 merge |
 | This PR | Pending Steward resolve; refresh the tip row after merge when `main` advances |
 
-Revert by deleting this file and removing pointers from [README.md](README.md), [SECURITY.md](SECURITY.md), and [docs/HIREABILITY.md](docs/HIREABILITY.md).
+Revert by deleting this file and removing pointers from [README.md](README.md) and [SECURITY.md](SECURITY.md).
