@@ -8,12 +8,6 @@
 
 That split is the product. You can read, change, and test the seam on a machine that does not have StarCraft II installed. A live match is a different, licensed install.
 
-## No training result is published here
-
-No win rate, episode return, training curve, or match outcome is claimed. This repository does not contain checkpoints, TensorBoard logs, replays, or a results file. `.gitignore` excludes `src/.runtime/`, `logs/`, and `wandb/`. The badge above means the headless protocol tests passed. It says nothing about playing strength.
-
-There is no screenshot and no demo replay in the repository.
-
 ## Why try it
 
 A commercial game client and an RL loop want different things. The game owns its process and its event loop. The learner wants a `step()` that returns a fixed-shape observation. Keeping them in one process makes every training bug a game bug.
@@ -34,6 +28,7 @@ Point `SC2_RUNTIME_DIR` at a different directory per process and several learner
 - [Demo without the game](#demo-without-the-game)
 - [Getting started](#getting-started)
 - [Playing a real match](#playing-a-real-match)
+- [Status](#status)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -214,6 +209,10 @@ src/config.py           paths, SAVE_REPLAY, offline W&B
 tests/                  headless protocol tests
 run/                    Windows, macOS, and Linux setup
 ```
+
+## Status
+
+No checkpoints, TensorBoard logs, replays, or results file are committed (`.gitignore` excludes `src/.runtime/`, `logs/`, and `wandb/`), so this repository does not report a win rate or training curve yet. The headless tests badge covers the IPC protocol and environment boundary, not playing strength.
 
 ## Contributing
 
