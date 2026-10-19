@@ -1,7 +1,7 @@
 # StarCraft II PPO Agent Makefile
 # Common tasks for training, evaluation, and setup
 
-.PHONY: help install setup-maps train train-ppo train-mlpp test test-live test-bot test-model clean clean-models clean-logs clean-wandb clean-all build check-env setup-windows setup-linux setup-macos
+.PHONY: help install setup-maps train train-ppo train-mlpp test test-live test-bot test-model ci-test clean clean-models clean-logs clean-wandb clean-all build check-env setup-windows setup-linux setup-macos
 
 # Default target
 help:
@@ -85,6 +85,11 @@ train-mlpp:
 test:
 	@echo "Running headless unit tests..."
 	uv run pytest -q tests
+
+ci-test:
+	@test -n "$(PYTHON_VERSION)" || (echo "Set PYTHON_VERSION (e.g. 3.12)"; exit 1)
+	@echo "Running CI headless tests (Python $(PYTHON_VERSION))..."
+	uv run --python "$(PYTHON_VERSION)" pytest -q tests/test_ipc.py tests/test_sc2env.py tests/test_incredibot.py
 
 test-live: test-bot test-model
 
